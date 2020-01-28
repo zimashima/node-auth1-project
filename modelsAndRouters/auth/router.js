@@ -21,11 +21,12 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
 
-    let { username, password } = req.body;
-
     try {
-        const user = await usersDB.findBy({ username })
-        if (user && bcrypt.compareSync(password, user.password)){
+        const  { username, password } = req.body;
+        const user = await usersDB.findBy({ username }).first()
+        const passwordValid = await bcrypt.compareSync(password, user.password)
+
+        if (user && passwordValid){
             res.status(200).json({ message: `Welcome ${user.username}`})
         } else {
             res.status(401).json({ message: "Invalid Credentials" });
@@ -33,7 +34,7 @@ router.post("/login", async (req, res) => {
     }
     
     catch(err){
-        res.status(500).json(error)
+        res.status(500).json({message: `ERROR ${err}`})
     }
 })
 
