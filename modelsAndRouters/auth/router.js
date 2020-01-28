@@ -27,7 +27,13 @@ router.post("/login", async (req, res) => {
         const passwordValid = await bcrypt.compareSync(password, user.password)
 
         if (user && passwordValid){
-            res.status(200).json({ message: `Welcome ${user.username}`})
+
+            req.session.user = user
+            req.session.loggedIn = true
+
+            res.status(200).json({ 
+                message: `Welcome ${user.username}`})
+
         } else {
             res.status(401).json({ message: "Invalid Credentials" });
         }
@@ -37,5 +43,41 @@ router.post("/login", async (req, res) => {
         res.status(500).json({message: `ERROR ${err}`})
     }
 })
+
+
+router.get("/protected", async(req,res,next)=> {
+    
+    try {
+
+        if (!req.session || !req.session.user) {
+            return res.status(403).json({
+                message: `YOU SHALL NOT PASS`
+            })
+        }
+       
+        res.json({
+            message: "YOU MAY PROCEED"
+        })
+
+    }
+
+    catch(err){
+        next(err)
+    }
+})
+
+
+router.get("/logout", (req,res,next)=>{
+    req.session.destroy((err)=> {
+        if (err) {
+            next(err)
+        } else {
+            res.json({
+                message: `BYE!! DON'T COME BACK`
+            })
+        }
+    })
+})
+
 
 module.exports = router
